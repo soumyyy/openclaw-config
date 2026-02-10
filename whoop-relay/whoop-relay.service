@@ -1,0 +1,15 @@
+[Unit]
+Description=WHOOP Webhook Relay
+After=network.target
+
+[Service]
+Type=simple
+User=openclaw
+Group=openclaw
+EnvironmentFile=/etc/whoop-relay.env
+ExecStart=/usr/bin/node /home/openclaw/.openclaw/whoop-relay/relay.js
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

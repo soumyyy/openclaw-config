@@ -1,0 +1,7 @@
+tunnel: ff6a8d57-8362-459f-b161-eb86627839db
+credentials-file: /root/.cloudflared/ff6a8d57-8362-459f-b161-eb86627839db.json
+
+ingress:
+  - hostname: whoop.eclipsn.com
+    service: http://127.0.0.1:8787
+  - service: http_status:404

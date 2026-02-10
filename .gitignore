@@ -1,0 +1,25 @@
+# Secrets / credentials
+credentials/
+agents/
+telegram/
+whoop-relay/*.env
+
+# Runtime state
+logs/
+memory/
+cron/
+canvas/
+devices/
+identity/
+update-check.json
+
+# Backups
+openclaw.json.bak*
+
+# OS junk
+.DS_Store
+*.log
+
+# Optional: uncomment if you do NOT want memory notes in git
+# workspace/memory/
+.env
