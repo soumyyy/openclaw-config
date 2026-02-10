@@ -178,8 +178,12 @@ sudo cp "${REPO_DIR}/whoop-relay/whoop-relay.service" /etc/systemd/system/whoop-
 sudo systemctl daemon-reload
 sudo systemctl enable --now whoop-relay
 
-log "cloudflared tunnel (optional)"
-read_tty "configure cloudflared tunnel now? [y/N]" DO_TUNNEL "N"
+if [[ "${WHOOP_SKIP_TUNNEL:-}" == "1" ]]; then
+  DO_TUNNEL="N"
+else
+  log "cloudflared tunnel (optional)"
+  read_tty "configure cloudflared tunnel now? [y/N]" DO_TUNNEL "N"
+fi
 
 if [[ "$DO_TUNNEL" =~ ^[Yy]$ ]]; then
   if ! command -v cloudflared >/dev/null 2>&1; then
@@ -187,7 +191,7 @@ if [[ "$DO_TUNNEL" =~ ^[Yy]$ ]]; then
   else
     read_tty "existing tunnel UUID (leave blank to create new)" TUNNEL_UUID ""
     if [[ -z "$TUNNEL_UUID" ]]; then
-      read_tty "tunnel name [whoop-relay]" TUNNEL_NAME "whoop-relay"
+      read_tty "tunnel name" TUNNEL_NAME "whoop-relay"
       cloudflared tunnel login
       CREATE_OUT="$(cloudflared tunnel create "$TUNNEL_NAME")"
       TUNNEL_UUID="$(printf "%s" "$CREATE_OUT" | grep -oE '[0-9a-fA-F-]{36}' | head -n1)"
