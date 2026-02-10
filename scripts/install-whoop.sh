@@ -30,11 +30,19 @@ prompt() {
   if [[ -n "$current_value" ]]; then
     return 0
   fi
+  local input_fd="/dev/tty"
+  if [[ ! -t 0 ]]; then
+    if [[ ! -r "$input_fd" ]]; then
+      die "no TTY available for prompts; set $var_name in env and re-run"
+    fi
+  else
+    input_fd="/dev/stdin"
+  fi
   if [[ -n "$default_value" ]]; then
-    read -r -p "${prompt_text} [${default_value}]: " current_value
+    read -r -p "${prompt_text} [${default_value}]: " current_value < "$input_fd"
     current_value="${current_value:-$default_value}"
   else
-    read -r -p "${prompt_text}: " current_value
+    read -r -p "${prompt_text}: " current_value < "$input_fd"
   fi
   if [[ -z "$current_value" ]]; then
     die "missing required value: $var_name"
