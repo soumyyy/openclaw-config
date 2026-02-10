@@ -50,6 +50,28 @@ prompt() {
   printf -v "$var_name" "%s" "$current_value"
 }
 
+read_tty() {
+  local prompt_text="$1"
+  local var_name="$2"
+  local default_value="${3:-}"
+  local input_fd="/dev/tty"
+  if [[ ! -t 0 ]]; then
+    if [[ ! -r "$input_fd" ]]; then
+      die "no TTY available for prompts; set $var_name in env and re-run"
+    fi
+  else
+    input_fd="/dev/stdin"
+  fi
+  local value=""
+  if [[ -n "$default_value" ]]; then
+    read -r -p "${prompt_text} [${default_value}]: " value < "$input_fd"
+    value="${value:-$default_value}"
+  else
+    read -r -p "${prompt_text}: " value < "$input_fd"
+  fi
+  printf -v "$var_name" "%s" "$value"
+}
+
 is_placeholder() {
   [[ "$1" =~ ^\\$\\{[A-Z0-9_]+\\}$ ]]
 }
@@ -157,17 +179,15 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now whoop-relay
 
 log "cloudflared tunnel (optional)"
-read -r -p "configure cloudflared tunnel now? [y/N]: " DO_TUNNEL
-DO_TUNNEL="${DO_TUNNEL:-N}"
+read_tty "configure cloudflared tunnel now? [y/N]" DO_TUNNEL "N"
 
 if [[ "$DO_TUNNEL" =~ ^[Yy]$ ]]; then
   if ! command -v cloudflared >/dev/null 2>&1; then
     warn "cloudflared not found. install it first, then re-run the tunnel section."
   else
-    read -r -p "existing tunnel UUID (leave blank to create new): " TUNNEL_UUID
+    read_tty "existing tunnel UUID (leave blank to create new)" TUNNEL_UUID ""
     if [[ -z "$TUNNEL_UUID" ]]; then
-      read -r -p "tunnel name [whoop-relay]: " TUNNEL_NAME
-      TUNNEL_NAME="${TUNNEL_NAME:-whoop-relay}"
+      read_tty "tunnel name [whoop-relay]" TUNNEL_NAME "whoop-relay"
       cloudflared tunnel login
       CREATE_OUT="$(cloudflared tunnel create "$TUNNEL_NAME")"
       TUNNEL_UUID="$(printf "%s" "$CREATE_OUT" | grep -oE '[0-9a-fA-F-]{36}' | head -n1)"
