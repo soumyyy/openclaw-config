@@ -23,3 +23,4 @@ openclaw.json.bak*
 # Optional: uncomment if you do NOT want memory notes in git
 # workspace/memory/
 .env
+whoop-relay/cloudflared-config.yml

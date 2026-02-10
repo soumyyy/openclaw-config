@@ -83,7 +83,7 @@
       "gmail"
     ],
     "gmail": {
-      "account": "eclipsetheassistant@gmail.com",
+      "account": "${GMAIL_ACCOUNT}",
       "topic": "projects/eclipse-openclaw/topics/gog-gmail-watch",
       "subscription": "gog-gmail-watch-push",
       "pushToken": "${GMAIL_PUSH_TOKEN}",
@@ -133,7 +133,7 @@
         "enabled": true,
         "env": {
           "WHOOP_TOKEN_FILE": "/home/openclaw/.openclaw/credentials/whoop/tokens.json",
-          "WHOOP_CLIENT_ID": "4e1f4606-c259-46cf-8756-935d4564fd45",
+          "WHOOP_CLIENT_ID": "${WHOOP_CLIENT_ID}",
           "WHOOP_CLIENT_SECRET": "${WHOOP_CLIENT_SECRET}",
           "WHOOP_BASE_URL": "https://api.prod.whoop.com/developer"
         }
@@ -141,7 +141,7 @@
       "college": {
         "enabled": true,
         "env": {
-          "COLLEGE_GMAIL_ACCOUNT": "eclipsetheassistant@gmail.com"
+          "COLLEGE_GMAIL_ACCOUNT": "${COLLEGE_GMAIL_ACCOUNT}"
         }
       }
     }
