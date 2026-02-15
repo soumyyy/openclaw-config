@@ -57,6 +57,23 @@ function safeParseJson(text) {
   return null;
 }
 
+function fallbackFactsFromMessages(messages, maxFacts) {
+  const facts = [];
+  const pattern = /\b(i am|i'm|i have|i work|i study|i live|i like|i love|i prefer|i want|i need|my|we)\b/i;
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    const msg = messages[i] || "";
+    const sentences = msg.split(/(?<=[.!?])\s+/);
+    for (const sentence of sentences) {
+      const s = sentence.trim();
+      if (!s || s.length < 8) continue;
+      if (!pattern.test(s)) continue;
+      facts.push({ category: "other", fact: s.replace(/\s+/g, " ") });
+      if (facts.length >= maxFacts) return facts.reverse();
+    }
+  }
+  return facts.reverse();
+}
+
 async function extractFactsWithLLM({ cfg, sessionKey, messages, maxFacts }) {
   if (!messages.length) return [];
 
@@ -94,16 +111,24 @@ Messages:\n${messages.map((m, i) => `${i + 1}. ${m}`).join("\n")}`;
     runId: `smart-mem-${Date.now()}`,
   });
 
-  const text = result.payloads?.[0]?.text ?? "";
+  const text = (result.payloads || [])
+    .map((p) => p?.text || "")
+    .filter(Boolean)
+    .join("\n")
+    .trim();
   const parsed = safeParseJson(text);
-  if (!Array.isArray(parsed)) return [];
-  return parsed
+  if (!Array.isArray(parsed)) {
+    return fallbackFactsFromMessages(messages, maxFacts);
+  }
+  const normalized = parsed
     .filter((item) => item && typeof item.fact === "string" && item.fact.trim())
     .slice(0, maxFacts)
     .map((item) => ({
       category: typeof item.category === "string" ? item.category : "other",
       fact: item.fact.trim(),
     }));
+  if (normalized.length) return normalized;
+  return fallbackFactsFromMessages(messages, maxFacts);
 }
 
 const saveSmartMemory = async (event) => {
@@ -153,7 +178,7 @@ const saveSmartMemory = async (event) => {
 
     await fs.writeFile(memoryFilePath, lines.join("\n"), "utf-8");
     const relPath = memoryFilePath.replace(os.homedir(), "~");
-    event.messages?.push(`🧠 Saved ${facts.length} fact(s) to ${relPath}`);
+    event.messages?.push(`Saved ${facts.length} fact(s) to ${relPath}`);
   } catch (err) {
     console.error("[smart-memory] Failed:", err instanceof Error ? err.message : String(err));
   }

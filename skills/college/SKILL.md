@@ -65,6 +65,15 @@ or
 node /home/openclaw/.openclaw/skills/college/scripts/college_gmail_get.mjs <id> raw
 ```
 
+For time-window lookup, use the wrapper (do not pass `--since` or `--start` to `gog gmail get` directly):
+```
+node /home/openclaw/.openclaw/skills/college/scripts/college_gmail_get.mjs --since 7d --query "class update" --max 20 --account "$COLLEGE_GMAIL_ACCOUNT"
+```
+or
+```
+node /home/openclaw/.openclaw/skills/college/scripts/college_gmail_get.mjs --start 2026/02/01 --end 2026/02/10 --query "exam OR assignment" --max 20 --account "$COLLEGE_GMAIL_ACCOUNT"
+```
+
 ## Decision rules
 - If the user gives a date range, use `--from/--to` (Calendar) or `after:YYYY/MM/DD before:YYYY/MM/DD` (Gmail).
 - Prefer Calendar for “schedule”; use Gmail to confirm updates, cancellations, or room changes.

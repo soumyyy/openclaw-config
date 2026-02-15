@@ -1,0 +1,16 @@
+{
+  "id": "task-capture",
+  "name": "task capture",
+  "description": "capture tasks into tasks.md via /task or /todo",
+  "version": "0.1.0",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "tasksFile": { "type": "string" },
+      "defaultSection": { "type": "string" },
+      "listSection": { "type": "string" },
+      "confirm": { "type": "boolean" }
+    },
+    "additionalProperties": false
+  }
+}

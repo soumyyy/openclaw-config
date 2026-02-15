@@ -1,7 +1,7 @@
 {
   "meta": {
     "lastTouchedVersion": "2026.2.1",
-    "lastTouchedAt": "2026-02-03T05:10:53.731Z"
+    "lastTouchedAt": "2026-02-15T08:52:39.965Z"
   },
   "wizard": {
     "lastRunAt": "2026-02-03T05:10:53.728Z",
@@ -14,34 +14,69 @@
       "openrouter:default": {
         "provider": "openrouter",
         "mode": "api_key"
+      },
+      "nvidia:default": {
+        "provider": "nvidia",
+        "mode": "api_key"
+      }
+    }
+  },
+  "models": {
+    "providers": {
+      "nvidia": {
+        "baseUrl": "https://integrate.api.nvidia.com/v1",
+        "apiKey": "${NVIDIA_API_KEY}",
+        "api": "openai-completions",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "models": [
+          {
+            "id": "moonshotai/kimi-k2-instruct",
+            "name": "Kimi K2 Instruct",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 128000,
+            "maxTokens": 8192,
+            "compat": {
+              "supportsStore": false,
+              "supportsDeveloperRole": false,
+              "supportsReasoningEffort": false,
+              "maxTokensField": "max_tokens"
+            }
+          }
+        ]
       }
     }
   },
   "agents": {
     "defaults": {
       "model": {
-        "primary": "openrouter/moonshotai/kimi-k2-0905:exacto"
+        "primary": "nvidia/moonshotai/kimi-k2-instruct",
+        "fallbacks": [
+          "openrouter/auto"
+        ]
       },
       "models": {
         "openrouter/auto": {
           "alias": "OpenRouter"
         },
-        "openrouter/moonshotai/kimi-k2-0905:exacto": {}
+        "openrouter/moonshotai/kimi-k2-0905:exacto": {},
+        "nvidia/moonshotai/kimi-k2-instruct": {
+          "alias": "kimi2i-nv"
+        }
       },
       "workspace": "/home/openclaw/.openclaw/workspace",
-      "compaction": {
-        "mode": "safeguard"
-      },
-      "maxConcurrent": 4,
-      "subagents": {
-        "maxConcurrent": 8
-      },
       "memorySearch": {
         "enabled": true,
-        "sync": {
-          "watch": true,
-          "intervalMinutes": 15
-        },
         "extraPaths": [
           "/home/openclaw/obsidian/ObsidianVault1"
         ],
@@ -49,7 +84,24 @@
           "batch": {
             "enabled": false
           }
+        },
+        "sync": {
+          "onSearch": true,
+          "watch": true,
+          "intervalMinutes": 15
+        },
+        "query": {
+          "maxResults": 6,
+          "minScore": 0.18
         }
+      },
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "timeoutSeconds": 45,
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
       }
     }
   },
@@ -62,8 +114,50 @@
   },
   "hooks": {
     "enabled": true,
-    "token": "${OPENCLAW_HOOK_TOKEN}",
     "path": "/hooks",
+    "token": "${OPENCLAW_HOOK_TOKEN}",
+    "presets": [
+      "gmail"
+    ],
+    "transformsDir": "hooks-transforms",
+    "mappings": [
+      {
+        "id": "gmail-brief",
+        "match": {
+          "path": "gmail"
+        },
+        "action": "agent",
+        "wakeMode": "now",
+        "name": "Gmail",
+        "sessionKey": "hook:gmail:{{messages[0].id}}",
+        "messageTemplate": "college email fallback task.\noutput exactly 5 lines:\nemail: <subject>\nfrom: <sender>\nsummary: <single useful sentence>\nimportance: <low|medium|high>\naction: <one next step or none>\n\nemail:\nfrom: {{messages[0].from}}\nsubject: {{messages[0].subject}}\nsnippet: {{messages[0].snippet}}",
+        "thinking": "off",
+        "timeoutSeconds": 35,
+        "transform": {
+          "module": "gmail-college.js"
+        }
+      }
+    ],
+    "gmail": {
+      "account": "eclipsetheassistant@gmail.com",
+      "topic": "projects/eclipse-openclaw/topics/gog-gmail-watch",
+      "subscription": "gog-gmail-watch-push",
+      "pushToken": "d85bb2f4963c7f9e537fce4eb92ad3fe84d536f68178be32",
+      "hookUrl": "http://127.0.0.1:18789/hooks/gmail",
+      "includeBody": false,
+      "maxBytes": 8000,
+      "renewEveryMinutes": 720,
+      "serve": {
+        "bind": "127.0.0.1",
+        "port": 8788,
+        "path": "/"
+      },
+      "tailscale": {
+        "mode": "funnel",
+        "path": "/gmail-pubsub"
+      },
+      "thinking": "off"
+    },
     "internal": {
       "enabled": true,
       "entries": {
@@ -76,29 +170,15 @@
             "SMART_MEMORY_MESSAGES": "25",
             "SMART_MEMORY_MAX_FACTS": "8"
           }
+        },
+        "memory-recall": {
+          "enabled": true,
+          "env": {
+            "MEMORY_RECALL_MIN_SCORE": "0.2",
+            "MEMORY_RECALL_MAX_RESULTS": "6",
+            "MEMORY_RECALL_MAX_SNIPPETS": "3"
+          }
         }
-      }
-    },
-    "presets": [
-      "gmail"
-    ],
-    "gmail": {
-      "account": "${GMAIL_ACCOUNT}",
-      "topic": "projects/eclipse-openclaw/topics/gog-gmail-watch",
-      "subscription": "gog-gmail-watch-push",
-      "pushToken": "${GMAIL_PUSH_TOKEN}",
-      "hookUrl": "http://127.0.0.1:18789/hooks/gmail",
-      "includeBody": true,
-      "maxBytes": 20000,
-      "renewEveryMinutes": 720,
-      "serve": {
-        "bind": "127.0.0.1",
-        "port": 8788,
-        "path": "/"
-      },
-      "tailscale": {
-        "mode": "funnel",
-        "path": "/gmail-pubsub"
       }
     }
   },
@@ -106,7 +186,7 @@
     "telegram": {
       "enabled": true,
       "dmPolicy": "pairing",
-      "botToken": "${TELEGRAM_BOT_TOKEN}",
+      "botToken": "8231546563:AAEaIoevo1a7C1rzpqUy0jTzKa86w2HKKsc",
       "groupPolicy": "allowlist",
       "streamMode": "partial"
     }
@@ -117,7 +197,7 @@
     "bind": "loopback",
     "auth": {
       "mode": "token",
-      "token": "${OPENCLAW_GATEWAY_TOKEN}"
+      "token": "f85abd39b39d6eaae3ed01a78096c0994256f13fdfa4710f"
     },
     "tailscale": {
       "mode": "off",
@@ -133,23 +213,37 @@
         "enabled": true,
         "env": {
           "WHOOP_TOKEN_FILE": "/home/openclaw/.openclaw/credentials/whoop/tokens.json",
-          "WHOOP_CLIENT_ID": "${WHOOP_CLIENT_ID}",
-          "WHOOP_CLIENT_SECRET": "${WHOOP_CLIENT_SECRET}",
+          "WHOOP_CLIENT_ID": "4e1f4606-c259-46cf-8756-935d4564fd45",
+          "WHOOP_CLIENT_SECRET": "c6d95a0bca0cdee27e95defbc2b704eab0afbf79afd2efa177d5b21e916158dd",
           "WHOOP_BASE_URL": "https://api.prod.whoop.com/developer"
         }
       },
       "college": {
         "enabled": true,
         "env": {
-          "COLLEGE_GMAIL_ACCOUNT": "${COLLEGE_GMAIL_ACCOUNT}"
+          "COLLEGE_GMAIL_ACCOUNT": "eclipsetheassistant@gmail.com"
         }
       }
     }
   },
   "plugins": {
+    "load": {
+      "paths": [
+        "/home/openclaw/.openclaw/plugins/task-capture"
+      ]
+    },
     "entries": {
       "telegram": {
         "enabled": true
+      },
+      "task-capture": {
+        "enabled": true,
+        "config": {
+          "tasksFile": "/home/openclaw/.openclaw/workspace/TASKS.md",
+          "defaultSection": "inbox",
+          "listSection": "lists",
+          "confirm": true
+        }
       }
     }
   }
